@@ -17,6 +17,7 @@ SINGLE_H = int(3840 / H)
 #一枚画像
 def createBuf():
     return  np.zeros((int(SINGLE_H),int(SINGLE_W),3),np.uint8)
+
 if __name__ == '__main__':
     #縦長の動画受け取った時の処理必要
     aspect  = SINGLE_W / SINGLE_H
@@ -29,9 +30,18 @@ if __name__ == '__main__':
         ret, frame = cap.read()
         if frame is None:
             break
+        #とりあえず全部90度回転させる方針
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         worg = frame.shape[1]
+        horg = frame.shape[0]
         w = int(frame.shape[0] * aspect)
-        trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
+        h = int(frame.shape[1] / aspect)
+        if frame.shape[0] > frame.shape[1] : 
+            #trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
+            trim = frame[ int((horg - h) / 2 )  : int(  ( horg+h) / 2  ),: ] 
+            pass
+        else:
+            trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
         print(trim.shape)
         resized = cv2.resize(trim,(SINGLE_W,SINGLE_H))
         print(resized.shape)
@@ -50,6 +60,7 @@ if __name__ == '__main__':
         i = round(pos)
         ws = p % W * SINGLE_W
         hs = int(p / W) *SINGLE_H
+
         final[hs:hs+SINGLE_H,ws:ws+SINGLE_W]= images[i]
 
         #hs = p % H * SINGLE_H
