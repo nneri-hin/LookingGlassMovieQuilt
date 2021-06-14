@@ -22,6 +22,11 @@ if __name__ == '__main__':
     aspect  = SINGLE_W / SINGLE_H
     print(aspect)
     cap = cv2.VideoCapture(a[1])
+    print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    print(cap.get(cv2.CAP_PROP_FORMAT))
+    print(cap.get(cv2.CAP_PROP_MODE))
+    exit()
     cnt = 0
     images = []
     while(cap.isOpened()):
@@ -30,8 +35,15 @@ if __name__ == '__main__':
         if frame is None:
             break
         worg = frame.shape[1]
+        horg = frame.shape[0]
         w = int(frame.shape[0] * aspect)
-        trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
+        h = int(frame.shape[1] / aspect)
+        if frame.shape[0] > frame.shape[1] : 
+            #trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
+            trim = frame[ int((horg - h) / 2 )  : int(  ( horg+h) / 2  ),: ] 
+            pass
+        else:
+            trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
         print(trim.shape)
         resized = cv2.resize(trim,(SINGLE_W,SINGLE_H))
         print(resized.shape)
@@ -50,6 +62,7 @@ if __name__ == '__main__':
         i = round(pos)
         ws = p % W * SINGLE_W
         hs = int(p / W) *SINGLE_H
+
         final[hs:hs+SINGLE_H,ws:ws+SINGLE_W]= images[i]
 
         #hs = p % H * SINGLE_H
