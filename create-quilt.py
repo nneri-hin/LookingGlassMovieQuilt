@@ -17,16 +17,12 @@ SINGLE_H = int(3840 / H)
 #一枚画像
 def createBuf():
     return  np.zeros((int(SINGLE_H),int(SINGLE_W),3),np.uint8)
+
 if __name__ == '__main__':
     #縦長の動画受け取った時の処理必要
     aspect  = SINGLE_W / SINGLE_H
     print(aspect)
     cap = cv2.VideoCapture(a[1])
-    print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    print(cap.get(cv2.CAP_PROP_FORMAT))
-    print(cap.get(cv2.CAP_PROP_MODE))
-    exit()
     cnt = 0
     images = []
     while(cap.isOpened()):
@@ -34,6 +30,8 @@ if __name__ == '__main__':
         ret, frame = cap.read()
         if frame is None:
             break
+        #とりあえず全部90度回転させる方針
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         worg = frame.shape[1]
         horg = frame.shape[0]
         w = int(frame.shape[0] * aspect)
