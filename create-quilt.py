@@ -6,6 +6,7 @@ import datetime
 import locale   
 import numpy as np
 import cv2
+from optparse import OptionParser
 
 W= 8
 H= 6
@@ -25,6 +26,11 @@ def createBuf():
 
 if __name__ == '__main__':
     #縦長の動画受け取った時の処理必要
+    parser =  OptionParser()
+    parser.add_option("-r","--rotate_clockwise",dest="rotate_clock",action="store_true",default=False,help="movie rotating clockwise")
+    parser.add_option("-R","--rotate_counter",dest="rotate_counter",action="store_true",default=False,help="movie rotating counter clockwise")
+    parser.add_option("-i","--reverse",dest="reverse",action="store_true",default=False,help="Reverse Rotation")
+    (options,args) = parser.parse_args()
     aspect  = SINGLE_W / SINGLE_H
     print(aspect)
     cap = cv2.VideoCapture(a[1])
@@ -36,30 +42,32 @@ if __name__ == '__main__':
         if frame is None:
             break
         #とりあえず全部90度回転させる方針
-        #frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        #frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        if options.rotate_clock:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        if options.rotate_counter:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         worg = frame.shape[1]
         horg = frame.shape[0]
         w = int(frame.shape[0] * aspect)
         h = int(frame.shape[1] / aspect)
-        print(w,h,aspect)
+        #print(w,h,aspect)
         movAspect = frame.shape[0] / frame.shape[1]
-        print(aspect,movAspect,frame.shape[0],frame.shape[1])
-        print(movAspect / aspect)
-        print( aspect / movAspect)
+        #print(aspect,movAspect,frame.shape[0],frame.shape[1])
+        #print(movAspect / aspect)
+        #print( aspect / movAspect)
         #if frame.shape[0] > frame.shape[1] : 
         if movAspect / aspect > 1 :
-            print("trim1")
+            #print("trim1")
             #trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
             trim = frame[ int((horg - h) / 2 )  : int(  ( horg+h) / 2  ),: ] 
-            print(trim.shape)
+            #print(trim.shape)
             pass
         else:
-            print("trim2")
+            #print("trim2")
             trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
-            print(frame.shape)
-            print(trim.shape)
-        print(trim.shape)
+            #print(frame.shape)
+            #print(trim.shape)
+        #print(trim.shape)
         resized = cv2.resize(trim,(SINGLE_W,SINGLE_H))
         images.append(resized)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -71,6 +79,15 @@ if __name__ == '__main__':
     pos = 0.0
     p = 0
     final = np.zeros((MULTI_W,MULTI_H,3),np.uint8)
+    temp = []
+    print(cnt)
+    ##逆回転の時に使う
+    if options.reverse:
+        for i in range(len(images)):
+            print(i)
+            print(len(images)-i)
+            temp.append(images[len(images)-i-1])
+        images = temp
 
     while (pos < cnt - 1)  and p < W*H:
         pos = pos + offset
