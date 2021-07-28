@@ -6,13 +6,23 @@ import datetime
 import locale   
 import numpy as np
 import cv2
+from optparse import OptionParser
 
 W= 8
 H= 6
+W=5
+H=9
+
+#W= 4
+#H= 3
 MULTI_W = 3840
 MULTI_H = 3840
-SINGLE_W = int(3840 / W)
-SINGLE_H = int(3840 / H)
+#MULTI_W = 7680
+#MULTI_H = 7680
+#MULTI_W = 1920
+#MULTI_H = 1920
+SINGLE_W = int(MULTI_W / W)
+SINGLE_H = int(MULTI_H / H)
 
 #一枚画像
 def createBuf():
@@ -20,9 +30,19 @@ def createBuf():
 
 if __name__ == '__main__':
     #縦長の動画受け取った時の処理必要
+    parser =  OptionParser()
+    parser.add_option("-r","--rotate_clockwise",dest="rotate_clock",action="store_true",default=False,help="movie rotating clockwise")
+    parser.add_option("-R","--rotate_counter",dest="rotate_counter",action="store_true",default=False,help="movie rotating counter clockwise")
+    parser.add_option("-i","--reverse",dest="reverse",action="store_true",default=False,help="Reverse Rotation")
+    parser.add_option("-p","--portrate",dest="portrate",action="store_true",default=True,help="Reverse Rotation")
+    parser.add_option("-t","--trim",dest="trim",action="store_true",default=False,help="Reverse Rotation")
+    parser.add_option("-f","--fit",dest="fit",action="store_true",default=False,help="Reverse Rotation")
+    (options,args) = parser.parse_args()
     aspect  = SINGLE_W / SINGLE_H
+    if options.portrate : 
+        aspect = 3/4
     print(aspect)
-    cap = cv2.VideoCapture(a[1])
+    cap = cv2.VideoCapture(args[0])
     cnt = 0
     images = []
     while(cap.isOpened()):
@@ -31,42 +51,67 @@ if __name__ == '__main__':
         if frame is None:
             break
         #とりあえず全部90度回転させる方針
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        if options.rotate_clock:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        if options.rotate_counter:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         worg = frame.shape[1]
         horg = frame.shape[0]
         w = int(frame.shape[0] * aspect)
         h = int(frame.shape[1] / aspect)
-        if frame.shape[0] > frame.shape[1] : 
+        #print(w,h,aspect)
+        movAspect = frame.shape[0] / frame.shape[1]
+        #print(aspect,movAspect,frame.shape[0],frame.shape[1])
+        #print(movAspect / aspect)
+        #print( aspect / movAspect)
+        #if frame.shape[0] > frame.shape[1] : 
+        if movAspect / aspect > 1 :
+            #print("trim1")
             #trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
             trim = frame[ int((horg - h) / 2 )  : int(  ( horg+h) / 2  ),: ] 
+            #print(trim.shape)
             pass
         else:
+            #print("trim2")
             trim = frame[:, int((worg - w) / 2 )  : int(  ( worg+w) / 2  ) ]
-        print(trim.shape)
+            #print(frame.shape)
+            #print(trim.shape)
+        #print(trim.shape)
         resized = cv2.resize(trim,(SINGLE_W,SINGLE_H))
-        print(resized.shape)
         images.append(resized)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     #一旦画像を格納してからやるのはあとで特徴量抽出して使用フレームを決めるため
     cnt = len(images)
-    offset = (len(images) -1 ) / 48
+    offset = (len(images) -1 ) / (W*H)
     #print(cnt-1 / 48 )
     pos = 0.0
     p = 0
     final = np.zeros((MULTI_W,MULTI_H,3),np.uint8)
-    while pos < cnt - 1 :
+    temp = []
+    print(cnt)
+    ##逆回転の時に使う
+    if options.reverse:
+        for i in range(len(images)):
+            print(i)
+            print(len(images)-i)
+            temp.append(images[len(images)-i-1])
+        images = temp
+
+    while (pos < cnt - 1)  and p < W*H:
         pos = pos + offset
         i = round(pos)
         ws = p % W * SINGLE_W
         hs = int(p / W) *SINGLE_H
-
-        final[hs:hs+SINGLE_H,ws:ws+SINGLE_W]= images[i]
-
+        if i >len(images) -1 :
+            i = len(images) -1 
+        #final[hs:hs+SINGLE_H,ws:ws+SINGLE_W]= images[i]
+        final[hs:hs+SINGLE_H,MULTI_W-ws-SINGLE_W:MULTI_W-ws]= images[i]
         #hs = p % H * SINGLE_H
         #ws = int(p/H) * SINGLE_W
         #final[ws:ws+SINGLE_W,hs:hs+SINGLE_H] = images[i]
         p += 1
     cap.release()
-    cv2.imwrite("out.png",final)
+    cv2.imwrite(args[1],final)
     #cv2.destroyAllWindows()
+
