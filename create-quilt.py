@@ -10,13 +10,17 @@ from optparse import OptionParser
 
 W= 8
 H= 6
-#W=5
-#H=9
+W=5
+H=9
 
+#W= 4
+#H= 3
 MULTI_W = 3840
 MULTI_H = 3840
 #MULTI_W = 7680
 #MULTI_H = 7680
+#MULTI_W = 1920
+#MULTI_H = 1920
 SINGLE_W = int(MULTI_W / W)
 SINGLE_H = int(MULTI_H / H)
 
@@ -30,10 +34,15 @@ if __name__ == '__main__':
     parser.add_option("-r","--rotate_clockwise",dest="rotate_clock",action="store_true",default=False,help="movie rotating clockwise")
     parser.add_option("-R","--rotate_counter",dest="rotate_counter",action="store_true",default=False,help="movie rotating counter clockwise")
     parser.add_option("-i","--reverse",dest="reverse",action="store_true",default=False,help="Reverse Rotation")
+    parser.add_option("-p","--portrate",dest="portrate",action="store_true",default=True,help="Reverse Rotation")
+    parser.add_option("-t","--trim",dest="trim",action="store_true",default=False,help="Reverse Rotation")
+    parser.add_option("-f","--fit",dest="fit",action="store_true",default=False,help="Reverse Rotation")
     (options,args) = parser.parse_args()
     aspect  = SINGLE_W / SINGLE_H
+    if options.portrate : 
+        aspect = 3/4
     print(aspect)
-    cap = cv2.VideoCapture(a[1])
+    cap = cv2.VideoCapture(args[0])
     cnt = 0
     images = []
     while(cap.isOpened()):
@@ -74,7 +83,7 @@ if __name__ == '__main__':
             break
     #一旦画像を格納してからやるのはあとで特徴量抽出して使用フレームを決めるため
     cnt = len(images)
-    offset = (len(images) -1 ) / 48
+    offset = (len(images) -1 ) / (W*H)
     #print(cnt-1 / 48 )
     pos = 0.0
     p = 0
@@ -103,6 +112,6 @@ if __name__ == '__main__':
         #final[ws:ws+SINGLE_W,hs:hs+SINGLE_H] = images[i]
         p += 1
     cap.release()
-    cv2.imwrite(a[2],final)
+    cv2.imwrite(args[1],final)
     #cv2.destroyAllWindows()
 
